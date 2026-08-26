@@ -21,14 +21,27 @@ describe('StudyCircle BDD & Security Tests', () => {
     });
 
     test('Scenario: Access control prevents non-members from posting (403 Forbidden)', async () => {
-        // Skapa en cirkel med användare 1
+        // 1. Registrera en användare och logga in för att få en giltig token
+        await request(app)
+            .post('/api/register')
+            .send({ username: 'outsider', password: 'password123' });
+
+        const loginRes = await request(app)
+            .post('/api/login')
+            .send({ username: 'outsider', password: 'password123' });
+
+        const token = loginRes.body.token;
+
+        // 2. Skapa en cirkel med en annan användare (ID 1)
         circles.push({ id: 1, name: 'DevSecOps Group', members: [1] });
 
-        // Försök posta som användare 99 (ej medlem)
+        // 3. Försök posta med giltig token, men som icke-medlem (användaren som loggade in har ID 2)
         const response = await request(app)
             .post('/api/circles/1/messages')
-            .send({ userId: 99, text: 'Obehörigt meddelande' });
+            .set('Authorization', `Bearer ${token}`) // Skickar med token så vi passerar 401
+            .send({ text: 'Obehörigt meddelande' });
 
+        // Nu ska servern släppa igenom token men neka medlemskapet med 403
         expect(response.statusCode).toBe(403);
         expect(response.body.error).toContain('Åtkomst nekad (403)');
     });

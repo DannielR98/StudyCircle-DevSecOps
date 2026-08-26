@@ -1,4 +1,4 @@
-name: CI Pipeline
+name: DevSecOps CI Pipeline
 
 on:
   push:
@@ -7,20 +7,29 @@ on:
     branches: [ main, master ]
 
 jobs:
-  build-and-test:
+  devsecops-pipeline:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
+    # 1. Hämta koden från repot (Version control & Git integration)
+    - name: Checkout repository
       uses: actions/checkout@v4
 
+    # 2. Sätt upp Node.js miljö
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
+    # 3. Installera beroenden
     - name: Install dependencies
       run: npm install
 
-    - name: Run health check test (eller linter)
-      run: node -e "console.log('CI Pipeline test passed successfully!')"
+    # 4. Automatiskt testande (Quality Assurance / Test automation)
+    - name: Run automated tests
+      run: npm test
+
+    # 5. Säkerhetsskanning (DevSecOps - Dependency Vulnerability Check)
+    - name: Run security audit for vulnerabilities
+      run: npm audit --audit-level=high
+      continue-on-error: true 

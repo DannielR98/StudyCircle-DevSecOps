@@ -53,7 +53,7 @@ jobs:
           -H "Content-Type: application/json" \
           -d '{"username": "pipelineuser", "password": "securepassword123"}')
         
-        # Extrahera token med Node.js (säkrare än grep i CI-miljöer)
+        # Extrahera token med Node.js
         TOKEN=$(node -e "const data = JSON.parse('$LOGIN_RES'); console.log(data.token || '');")
         
         if [ -z "$TOKEN" ]; then
@@ -80,21 +80,9 @@ jobs:
           p/security-audit
           p/expressjs
 
-    # 4. Beroendeskanning av npm-paket
+    # 4. Beroendeskanning av npm-paket (Bryter vid höga/kritiska sårbarheter)
     - name: Run security audit for vulnerabilities
       run: npm audit --audit-level=high  
-
-    # 2. SAST (Static Application Security Testing) med Semgrep
-    - name: Run SAST Security Scan
-      uses: returntocorp/semgrep-action@v1
-      with:
-        config: 
-          p/security-audit
-          p/expressjs
-
-    # 3. Beroendeskanning av npm-paket (Bryter vid höga/kritiska sårbarheter)
-    - name: Run security audit for vulnerabilities
-      run: npm audit --audit-level=high
 
   build-and-verify-docker:
     needs: [devsecops-pipeline]

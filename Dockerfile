@@ -1,4 +1,5 @@
 FROM node:20-alpine
+RUN apk update && apk upgrade --no-cache
 
 # Sätt arbetskatalog i containern
 WORKDIR /app

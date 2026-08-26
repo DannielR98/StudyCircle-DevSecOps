@@ -98,6 +98,7 @@
     </div>
 
     <script>
+    document.addEventListener('DOMContentLoaded', () => {
         let isLoginMode = true;
 
         const formTitle = document.getElementById('form-title');
@@ -108,7 +109,8 @@
         const responseMessage = document.getElementById('response-message');
 
         // Växla mellan Logga in och Registrera
-        switchModeBtn.addEventListener('click', () => {
+        switchModeBtn.addEventListener('click', (e) => {
+            e.preventDefault();
             isLoginMode = !isLoginMode;
             responseMessage.style.display = 'none';
             authForm.reset();
@@ -126,7 +128,7 @@
             }
         });
 
-        // Hantera formulärskick
+        // Hantera formulärskick (både registrering och inloggning)
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             const username = document.getElementById('username').value;
@@ -136,7 +138,7 @@
 
             try {
                 if (!isLoginMode) {
-                    // REGISTRERINGSROUTEN
+                    // REGISTRERING
                     const res = await fetch('/api/register', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
@@ -149,9 +151,8 @@
                         responseMessage.className = 'message success';
                         responseMessage.style.display = 'block';
                         
-                        // Byt till inloggningsläge efter en stund
                         setTimeout(() => {
-                            switchModeBtn.click();
+                            switchModeBtn.click(); // Byt tillbaka till inloggning
                         }, 2000);
                     } else {
                         responseMessage.textContent = data.error || 'Kunde inte registrera konto.';
@@ -159,11 +160,23 @@
                         responseMessage.style.display = 'block';
                     }
                 } else {
-                    // INLOGGNING (Simulerad / eller mot eventuell inloggningsroute om ni har en)
-                    // Håll till godo med meddelande tills vidare eller koppla mot valfri route
-                    responseMessage.textContent = 'Inloggningsfunktionalitet styrs härifrån. (Koppla till er inloggningsroute om det finns någon).';
-                    responseMessage.className = 'message success';
-                    responseMessage.style.display = 'block';
+                    // INLOGGNING
+                    const res = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ username, password })
+                    });
+                    const data = await res.json();
+
+                    if (res.ok) {
+                        responseMessage.textContent = `🎉 Inloggningen lyckades! Välkommen ${data.username}.`;
+                        responseMessage.className = 'message success';
+                        responseMessage.style.display = 'block';
+                    } else {
+                        responseMessage.textContent = data.error || 'Kunde inte logga in.';
+                        responseMessage.className = 'message error';
+                        responseMessage.style.display = 'block';
+                    }
                 }
             } catch (err) {
                 responseMessage.textContent = 'Kunde inte nå servern.';
@@ -171,6 +184,7 @@
                 responseMessage.style.display = 'block';
             }
         });
-    </script>
+    });
+</script>
 </body>
 </html>

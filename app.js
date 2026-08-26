@@ -12,7 +12,7 @@ const users = [];
 const circles = [];    
 const messages = [];   
 
-const JWT_SECRET = 'superhemlig_nyckel_123';
+const JWT_SECRET = process.env.JWT_SECRET || 'lokal_utvecklings_nyckel_123';
 
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'));

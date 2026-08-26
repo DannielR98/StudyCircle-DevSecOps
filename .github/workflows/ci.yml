@@ -10,6 +10,9 @@ jobs:
   devsecops-pipeline:
     runs-on: ubuntu-latest
 
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4

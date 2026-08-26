@@ -57,3 +57,66 @@ Projektet använder en automatiserad pipeline via GitHub Actions. Pipelinen trig
 *   Att automatiska tester (BDD/integrationssäkerhet) körs grönt via `npm test`.
 *   Att statisk kodanalys (SAST) utförs med **Semgrep** för att upptäcka kodsårbarheter.
 *   Att beroendeskanning körs via `npm audit` för att blockera kända sårbarheter i tredjepartspaket.
+
+
+För att testa lokalt kan vi köra:
+
+# 1. Skapa unika variabler för testet
+TEST_USER="user_$(date +%s)"
+PASSWORD="securepassword123"
+
+echo "=== 1. Testar hälsokontroll ==="
+curl -s http://localhost:4000/health
+echo -e "\n"
+
+echo "=== 2. Testar registrering ($TEST_USER) ==="
+REGISTER_RES=$(curl -s -X POST http://localhost:4000/api/register \
+  -H "Content-Type: application/json" \
+  -d "{\"username\": \"$TEST_USER\", \"password\": \"$PASSWORD\"}")
+echo "$REGISTER_RES"
+echo -e "\n"
+
+echo "=== 3. Testar inloggning och hämtar JWT-token ==="
+LOGIN_RES=$(curl -s -X POST http://localhost:4000/api/login \
+  -H "Content-Type: application/json" \
+  -d "{\"username\": \"$TEST_USER\", \"password\": \"$PASSWORD\"}")
+
+# Extrahera token säkert utan node -e tty-fel
+TOKEN=$(echo "$LOGIN_RES" | grep -o '"token":"[^"]*"' | cut -d'"' -f4)
+
+if [ -z "$TOKEN" ]; then
+  echo "Kunde inte hämta token! Svar från server: $LOGIN_RES"
+  exit 1
+fi
+echo "Token hämtad framgångsrikt!"
+echo -e "\n"
+
+echo "=== 4. Testar att skapa en cirkel ==="
+CIRCLE_RES=$(curl -s -X POST http://localhost:4000/api/circles \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"name": "DevSecOps Studiegrupp"}')
+echo "$CIRCLE_RES"
+
+# Extrahera cirkel-ID säkert med grep
+CIRCLE_ID=$(echo "$CIRCLE_RES" | grep -o '"id":[0-9]*' | head -1 | cut -d':' -f2)
+
+if [ -z "$CIRCLE_ID" ]; then
+  CIRCLE_ID=1
+fi
+
+echo -e "\nAnvänder Cirkel-ID: $CIRCLE_ID\n"
+
+echo "=== 5. Testar att skriva ett meddelande i cirkeln ==="
+MSG_RES=$(curl -s -X POST http://localhost:4000/api/circles/$CIRCLE_ID/messages \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $TOKEN" \
+  -d '{"text": "Hej! Detta är ett automatiserat testmeddelande i cirkeln."}')
+echo "$MSG_RES"
+echo -e "\n"
+
+echo "=== 6. Testar att hämta meddelandeflödet för cirkeln ==="
+GET_MSGS=$(curl -s -X GET http://localhost:4000/api/circles/$CIRCLE_ID/messages \
+  -H "Authorization: Bearer $TOKEN")
+echo "$GET_MSGS"
+echo -e "\n=== Test klart! ==="

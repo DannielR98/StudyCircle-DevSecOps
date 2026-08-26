@@ -48,3 +48,5 @@ Funktionaliteten och säkerhetskraven är definierade utifrån följande beteend
 Projektet använder en automatiserad pipeline via GitHub Actions. Pipelinen triggar vid varje kodändring (`push` eller `pull_request`) till huvudgrenen för att säkerställa:
 *   Att kodbasen kompilerar och kan starta utan beroendefel.
 *   Att inga regressioner introduceras i API-endpoints.
+
+2026-08-26 13:48: lagt till automatiserade tester och säkerhetsskanning i pipelinen

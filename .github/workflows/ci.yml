@@ -96,8 +96,8 @@ jobs:
     - name: Run security audit for vulnerabilities
       run: npm audit --audit-level=high
 
-  deploy-to-cloud:
-    needs: [devsecops-pipeline]  # Körs enbart om CI-pipelinen lyckas
+  build-and-verify-docker:
+    needs: [devsecops-pipeline]
     if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/master')
     runs-on: ubuntu-latest
 
@@ -105,17 +105,7 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    - name: Logga att loopen är grön och startar deployment
+    - name: Bygg Docker-container (Verifierar att Dockerfile fungerar felfritt)
       run: |
-        echo "Alla säkerhetskontroller och tester godkända."
-        echo "Startar kontinuerlig driftsättning (CD) till molnmiljö..."
-
-    # Exempel på hur man triggar en automatisk webhook-deployment (t.ex. Render, Fly.io, Railway)
-    - name: Trigger Webhook Deployment
-      run: |
-        if [ -n "${{ secrets.DEPLOY_WEBHOOK_URL }}" ]; then
-          curl -X POST "${{ secrets.DEPLOY_WEBHOOK_URL }}"
-          echo "Deploy-webhook anropad framgångsrikt!"
-        else
-          echo "Ingen DEPLOY_WEBHOOK_URL hittades i GitHub Secrets. Skippar webhook-anrop."
-        fi
+        docker build -t studycircle:latest .
+        echo "Docker-image byggdes utan fel! Applikationen är redo för säker molndrift."

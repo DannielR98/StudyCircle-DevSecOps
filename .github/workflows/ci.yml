@@ -29,6 +29,61 @@ jobs:
     - name: Run automated tests
       run: npm test
 
+    # 2. AUTOMATISERA cURL-TESTER I PIPELINEN
+    - name: Run automated cURL integration tests
+      run: |
+        # Starta servern i bakgrunden och spara process-ID
+        node server.js &
+        SERVER_PID=$!
+        
+        # Vänta några sekunder tills servern har startat ordentligt
+        sleep 3
+
+        echo "Testar hälsokontroll..."
+        curl -f http://localhost:4000/health || exit 1
+
+        echo "Testar registrering..."
+        REGISTER_RES=$(curl -s -X POST http://localhost:4000/api/register \
+          -H "Content-Type: application/json" \
+          -d '{"username": "pipelineuser", "password": "securepassword123"}')
+        echo "Register response: $REGISTER_RES"
+
+        echo "Testar inloggning och sparar token..."
+        LOGIN_RES=$(curl -s -X POST http://localhost:4000/api/login \
+          -H "Content-Type: application/json" \
+          -d '{"username": "pipelineuser", "password": "securepassword123"}')
+        
+        # Extrahera token med Node.js (säkrare än grep i CI-miljöer)
+        TOKEN=$(node -e "const data = JSON.parse('$LOGIN_RES'); console.log(data.token || '');")
+        
+        if [ -z "$TOKEN" ]; then
+          echo "Kunde inte hämta token!"
+          exit 1
+        fi
+        echo "Token hämtad framgångsrikt!"
+
+        echo "Testar att skapa cirkel med token..."
+        CIRCLE_RES=$(curl -s -X POST http://localhost:4000/api/circles \
+          -H "Content-Type: application/json" \
+          -H "Authorization: Bearer $TOKEN" \
+          -d '{"name": "Pipeline Test Cirkel"}')
+        echo "Cirkel response: $CIRCLE_RES"
+
+        # Stäng ner servern snyggt när vi är klara
+        kill $SERVER_PID
+
+    # 3. SAST (Static Application Security Testing) med Semgrep
+    - name: Run SAST Security Scan
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: 
+          p/security-audit
+          p/expressjs
+
+    # 4. Beroendeskanning av npm-paket
+    - name: Run security audit for vulnerabilities
+      run: npm audit --audit-level=high  
+
     # 2. SAST (Static Application Security Testing) med Semgrep
     - name: Run SAST Security Scan
       uses: returntocorp/semgrep-action@v1

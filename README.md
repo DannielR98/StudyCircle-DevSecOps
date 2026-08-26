@@ -39,16 +39,35 @@ Funktionaliteten och säkerhetskraven är definierade utifrån följande beteend
 *   **När** jag anger ett önskat användarnamn och lösenord och slutför registreringen,
 *   **Så** ska mitt konto skapas säkert och jag ska kunna logga in för att börja använda tjänsten.
 
-#### Scenario 2: Obehörig användare hindras från att delta i en skyddad cirkel
-*   **Givet** att jag *inte* är med i en specifik studiegrupp ("cirkel"),
-*   **När** jag försöker skriva eller läsa meddelanden i den gruppen,
-*   **Så** ska systemet blockera mitt försök och visa ett meddelande om att jag saknar behörighet.
+#### Scenario 2: Misslyckad inloggning vid felaktiga uppgifter
+*   **Givet** att jag har ett registrerat konto,
+*   **När** jag försöker logga in med felaktigt lösenord eller obefintligt användarnamn,
+*   **Så** ska systemet neka inloggning med en säkerhetskod (401 Unauthorized) och inte lämna ut känslig information.
 
-#### Scenario 3: Medlem delar innehåll i sin cirkel
+#### Scenario 3: Användare skapar en ny cirkel
+*   **Givet** att jag är inloggad som godkänd användare,
+*   **När** jag skapar en ny cirkel med ett angivet namn,
+*   **Så** ska cirkeln sparas i systemet och jag ska automatiskt läggas till som första medlem.
+
+#### Scenario 4: Användare ansluter till en befintlig cirkel
+*   **Givet** att det finns en skapad cirkel i systemet och jag är inloggad,
+*   **När** jag väljer att gå med i cirkeln via dess ID,
+*   **Så** ska jag registreras som medlem och få tillgång till cirkelns flöde.
+
+#### Scenario 5: Medlem läser meddelanden i sin cirkel
+*   **Givet** att jag är medlem i en specifik cirkel där det skickats meddelanden,
+*   **När** jag begär att hämta meddelandeflödet för den cirkeln,
+*   **Så** ska jag få en lista på samtliga meddelanden som har publicerats där.
+
+#### Scenario 6: Medlem delar innehåll i sin cirkel
 *   **Givet** att jag är godkänd medlem i en studiegrupp ("cirkel"),
 *   **När** jag skriver och skickar ett meddelande i gruppens flöde,
 *   **Så** ska meddelandet omedelbart sparas och synas för de andra medlemmarna i gruppen.
 
+#### Scenario 7: Obehörig användare hindras från att delta i en skyddad cirkel
+*   **Givet** att jag *inte* är med i en specifik studiegrupp ("cirkel"),
+*   **När** jag försöker skriva eller läsa meddelanden i den gruppen,
+*   **Så** ska systemet blockera mitt försök och svara med `403 Forbidden`.
 ---
 
 ## 4. CI/CD & DevSecOps-process

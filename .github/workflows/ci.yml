@@ -11,25 +11,29 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    # 1. Hämta koden från repot (Version control & Git integration)
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # 2. Sätt upp Node.js miljö
     - name: Set up Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
 
-    # 3. Installera beroenden
     - name: Install dependencies
       run: npm install
 
-    # 4. Automatiskt testande (Quality Assurance / Test automation)
+    # 1. Kör automatiska tester (inkluderar BDD / affärslogik)
     - name: Run automated tests
       run: npm test
 
-    # 5. Säkerhetsskanning (DevSecOps - Dependency Vulnerability Check)
+    # 2. SAST (Static Application Security Testing) med Semgrep för att hitta kodsårbarheter
+    - name: Run SAST Security Scan
+      uses: returntocorp/semgrep-action@v1
+      with:
+        config: 
+          p/security-audit
+          p/expressjs
+
+    # 3. Beroendeskanning (Bryter pipelinen om höga/kritiska sårbarheter hittas i npm-paket)
     - name: Run security audit for vulnerabilities
       run: npm audit --audit-level=high
-      continue-on-error: true 

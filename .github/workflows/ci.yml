@@ -26,7 +26,7 @@ jobs:
     - name: Run automated tests
       run: npm test
 
-    # 2. SAST (Static Application Security Testing) med Semgrep för att hitta kodsårbarheter
+    # 2. SAST (Static Application Security Testing) med Semgrep
     - name: Run SAST Security Scan
       uses: returntocorp/semgrep-action@v1
       with:
@@ -34,6 +34,20 @@ jobs:
           p/security-audit
           p/expressjs
 
-    # 3. Beroendeskanning (Bryter pipelinen om höga/kritiska sårbarheter hittas i npm-paket)
+    # 3. Beroendeskanning av npm-paket (Bryter vid höga/kritiska sårbarheter)
     - name: Run security audit for vulnerabilities
       run: npm audit --audit-level=high
+
+    # 4. Bygg Docker-container
+    - name: Build Docker image
+      run: docker build -t studycircle-app:latest .
+
+    # 5. Container Security Scan med Trivy (Skannar imagen efter OS- och paket-sårbarheter)
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        image-ref: 'studycircle-app:latest'
+        format: 'table'
+        exit-code: '1' # Bryter pipelinen om sårbarheter hittas
+        ignore-unfixed: true
+        severity: 'CRITICAL,HIGH'
